@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using SimpleEncryptor.Core;
 
 namespace SimpleEncryptor.Tests
 {

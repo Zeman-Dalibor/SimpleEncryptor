@@ -1,3 +1,5 @@
+using SimpleEncryptor.Core;
+
 namespace SimpleEncryptor
 {
     public partial class MainForm : Form
@@ -42,16 +44,68 @@ namespace SimpleEncryptor
             };
         }
 
-        private void encryptBtn_Click(object? sender, EventArgs e)
+        private bool ValidateParameters(EncryptionParameters parameters)
         {
-            var parameters = GetParametersFromForm();
-            // TODO: implement encryption logic
+            if (string.IsNullOrWhiteSpace(parameters.InputFilePath) || !File.Exists(parameters.InputFilePath))
+            {
+                MessageBox.Show("Input file does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            if (!parameters.InPlace && string.IsNullOrWhiteSpace(parameters.OutputFilePath))
+            {
+                MessageBox.Show("Please specify an output file path or enable In-Place.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            return true;
         }
 
-        private void decryptBtn_Click(object? sender, EventArgs e)
+        private async Task ExecuteOperationAsync(EncryptionParameters parameters,
+            Action<EncryptionParameters> operation, string successMessage, string errorPrefix)
+        {
+            SetUiEnabled(false);
+            try
+            {
+                await Task.Run(() => operation(parameters));
+                MessageBox.Show(successMessage, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{errorPrefix}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                SetUiEnabled(true);
+            }
+        }
+
+        private async void encryptBtn_Click(object? sender, EventArgs e)
         {
             var parameters = GetParametersFromForm();
-            // TODO: implement decryption logic
+            if (!ValidateParameters(parameters)) return;
+
+            await ExecuteOperationAsync(parameters, p => new FileEncryptor().Encrypt(p), "Encryption finished.", "Encryption failed");
+        }
+
+        private async void decryptBtn_Click(object? sender, EventArgs e)
+        {
+            var parameters = GetParametersFromForm();
+            if (!ValidateParameters(parameters)) return;
+
+            await ExecuteOperationAsync(parameters, p => new FileEncryptor().Decrypt(p), "Decryption finished.", "Decryption failed");
+        }
+
+        private void SetUiEnabled(bool enabled)
+        {
+            encryptBtn.Enabled = enabled;
+            decryptBtn.Enabled = enabled;
+            inputFileBtn.Enabled = enabled;
+            outputBtn.Enabled = enabled;
+            inplaceCheckBox.Enabled = enabled;
+            inputFileTextBox.Enabled = enabled;
+            outputTextBox.Enabled = enabled && !inplaceCheckBox.Checked;
+            passwordTextBox.Enabled = enabled;
         }
     }
 }

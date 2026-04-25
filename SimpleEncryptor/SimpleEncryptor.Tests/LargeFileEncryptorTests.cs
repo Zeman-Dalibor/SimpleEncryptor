@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using SimpleEncryptor.Core;
 
 namespace SimpleEncryptor.Tests
 {

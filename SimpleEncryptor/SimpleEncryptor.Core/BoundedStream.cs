@@ -1,4 +1,4 @@
-namespace SimpleEncryptor
+namespace SimpleEncryptor.Core
 {
     internal class BoundedStream : Stream
     {

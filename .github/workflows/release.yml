@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'Release name (e.g. v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Run tests
+        run: dotnet test SimpleEncryptor/SimpleEncryptor.Tests/SimpleEncryptor.Tests.csproj --filter "Category!=LargeFile"
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            project: SimpleEncryptor/SimpleEncryptor/SimpleEncryptor.csproj
+            artifact: SimpleEncryptor-win-x64
+            extension: .exe
+          - os: ubuntu-latest
+            rid: linux-x64
+            project: SimpleEncryptor/SimpleEncryptor.Cli/SimpleEncryptor.Cli.csproj
+            artifact: SimpleEncryptor-linux-x64
+            extension: ''
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ matrix.project }}
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish/${{ matrix.rid }}
+
+      - name: Rename artifact
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem "publish/${{ matrix.rid }}/SimpleEncryptor${{ matrix.extension }}"
+          Copy-Item $exe.FullName "publish/${{ matrix.artifact }}${{ matrix.extension }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: publish/${{ matrix.artifact }}${{ matrix.extension }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_name }}
+          name: ${{ github.event.inputs.release_name }}
+          generate_release_notes: true
+          files: artifacts/**/*

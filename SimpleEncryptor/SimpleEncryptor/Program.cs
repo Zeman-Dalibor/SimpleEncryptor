@@ -1,17 +1,20 @@
+using SimpleEncryptor.Core;
+
 namespace SimpleEncryptor
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
-        static void Main()
+        static int Main(string[] args)
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+            if (args.Length > 0)
+            {
+                return CliRunner.Run(args);
+            }
+
             ApplicationConfiguration.Initialize();
             Application.Run(new MainForm());
+            return 0;
         }
     }
 }

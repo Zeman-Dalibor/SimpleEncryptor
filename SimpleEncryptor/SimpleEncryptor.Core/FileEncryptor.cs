@@ -1,11 +1,12 @@
 using System.Security.Cryptography;
 
-namespace SimpleEncryptor
+namespace SimpleEncryptor.Core
 {
     public class FileEncryptor
     {
         private const int BufferSize = 64 * 1024;
         private const int FooterSize = 16 + 8; // IV + original size
+        public Action<long, long>? ProgressCallback { get; set; }
 
         public void Encrypt(EncryptionParameters parameters)
         {
@@ -33,7 +34,7 @@ namespace SimpleEncryptor
             using var fs = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite);
             long originalSize = fs.Length;
 
-            TransformInPlace(fs, originalSize, aes.CreateEncryptor());
+            TransformInPlace(fs, originalSize, aes.CreateEncryptor(), ProgressCallback);
             WriteFooter(fs, aes.IV, originalSize);
         }
 
@@ -44,7 +45,7 @@ namespace SimpleEncryptor
             long encryptedLength = fs.Length - FooterSize;
 
             using var aes = CreateAes(key, iv);
-            TransformInPlace(fs, encryptedLength, aes.CreateDecryptor());
+            TransformInPlace(fs, encryptedLength, aes.CreateDecryptor(), ProgressCallback);
             fs.SetLength(originalSize);
         }
 
@@ -55,7 +56,17 @@ namespace SimpleEncryptor
             using var output = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
 
             using (var cs = new CryptoStream(output, aes.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true))
-                input.CopyTo(cs, BufferSize);
+            {
+                var buffer = new byte[BufferSize];
+                int bytesRead;
+                long totalRead = 0;
+                while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    cs.Write(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    ProgressCallback?.Invoke(totalRead, originalSize);
+                }
+            }
 
             WriteFooter(output, aes.IV, originalSize);
         }
@@ -71,11 +82,19 @@ namespace SimpleEncryptor
             using var bounded = new BoundedStream(input, encryptedLength);
             using var output = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
             using var cs = new CryptoStream(bounded, aes.CreateDecryptor(), CryptoStreamMode.Read);
-            cs.CopyTo(output, BufferSize);
+            {
+                var buffer = new byte[BufferSize];
+                int bytesRead;
+                while ((bytesRead = cs.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    output.Write(buffer, 0, bytesRead);
+                    ProgressCallback?.Invoke(bounded.Position, encryptedLength);
+                }
+            }
             output.SetLength(originalSize);
         }
 
-        private static void TransformInPlace(FileStream fs, long dataLength, ICryptoTransform transform)
+        private static void TransformInPlace(FileStream fs, long dataLength, ICryptoTransform transform, Action<long, long>? progressCallback = null)
         {
             using var _ = transform;
             var readBuf = new byte[BufferSize];
@@ -108,6 +127,7 @@ namespace SimpleEncryptor
                 fs.Write(result, 0, resultLen);
                 readPos += bytesRead;
                 writePos += resultLen;
+                progressCallback?.Invoke(Math.Min(readPos, dataLength), dataLength);
             }
 
             fs.Flush();
