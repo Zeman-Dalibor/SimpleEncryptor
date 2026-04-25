@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SimpleEncryptor.Tests/SimpleEncryptor.Tests.csproj" />
+  <Project Path="SimpleEncryptor/SimpleEncryptor.csproj" />
+</Solution>
