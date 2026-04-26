@@ -53,7 +53,21 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Publish
+      - name: Publish (Windows — disable trimming)
+        if: matrix.os == 'windows-latest'
+        run: >
+          dotnet publish ${{ matrix.project }}
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish/${{ matrix.rid }}
+
+      - name: Publish (Other)
+        if: matrix.os != 'windows-latest'
         run: >
           dotnet publish ${{ matrix.project }}
           -c Release
