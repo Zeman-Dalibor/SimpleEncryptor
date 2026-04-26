@@ -180,9 +180,6 @@
             Controls.Add(inputFileTextBox);
             Name = "MainForm";
             Text = "Simple Fast Encryptor";
-            AllowDrop = true;
-            DragEnter += MainForm_DragEnter;
-            DragDrop += MainForm_DragDrop;
             ResumeLayout(false);
             PerformLayout();
         }

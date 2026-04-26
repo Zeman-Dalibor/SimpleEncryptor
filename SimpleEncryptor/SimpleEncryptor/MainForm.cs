@@ -112,39 +112,6 @@ namespace SimpleEncryptor
             passwordTextBox.Enabled = enabled;
         }
 
-        private void MainForm_DragEnter(object? sender, DragEventArgs e)
-        {
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effect = DragDropEffects.Copy;
-                inputFileTextBox.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            }
-            else
-            {
-                e.Effect = DragDropEffects.None;
-                inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
-            }
-        }
-
-        private void MainForm_DragDrop(object? sender, DragEventArgs e)
-        {
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length > 0)
-                {
-                    inputFileTextBox.Text = files[0];
-                    passwordTextBox.Focus();
-                    inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
-                }
-            }
-        }
-
-        private void MainForm_DragLeave(object? sender, EventArgs e)
-        {
-            inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
-        }
-
         private void TextBox_DragEnter(object? sender, DragEventArgs e)
         {
             if (sender is not TextBox tb) return;
