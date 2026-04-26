@@ -30,7 +30,8 @@ namespace SimpleEncryptor.Core
                 }
             }
 
-            if (inPlace && !string.IsNullOrWhiteSpace(outputPath))
+            bool isOutputSpecified = !string.IsNullOrWhiteSpace(outputPath);
+            if (inPlace && isOutputSpecified)
             {
                 Console.Error.WriteLine("Error: Specify either --inplace or --output <path>, not both.");
                 Console.Error.WriteLine();
@@ -38,7 +39,7 @@ namespace SimpleEncryptor.Core
                 return 1;
             }
 
-            if (!inPlace && string.IsNullOrWhiteSpace(outputPath))
+            if (!inPlace && !isOutputSpecified)
             {
                 Console.Error.WriteLine("Error: Specify either --inplace or --output <path>.");
                 Console.Error.WriteLine();
@@ -51,7 +52,7 @@ namespace SimpleEncryptor.Core
                 InputFilePath = filePath,
                 Password = password,
                 InPlace = inPlace,
-                OutputFilePath = string.IsNullOrWhiteSpace(outputPath) ? string.Empty : outputPath.Trim()
+                OutputFilePath = isOutputSpecified ? outputPath!.Trim() : string.Empty
             };
 
             if (!File.Exists(parameters.InputFilePath))

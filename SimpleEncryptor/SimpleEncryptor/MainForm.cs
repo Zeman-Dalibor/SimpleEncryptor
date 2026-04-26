@@ -12,6 +12,10 @@ namespace SimpleEncryptor
         private void inplaceCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             outputTextBox.Enabled = !inplaceCheckBox.Checked;
+            if (inplaceCheckBox.Checked)
+            {
+                outputTextBox.Text = string.Empty;
+            }
         }
 
         private void outputBtn_Click(object? sender, EventArgs e)
@@ -106,6 +110,125 @@ namespace SimpleEncryptor
             inputFileTextBox.Enabled = enabled;
             outputTextBox.Enabled = enabled && !inplaceCheckBox.Checked;
             passwordTextBox.Enabled = enabled;
+        }
+
+        private void MainForm_DragEnter(object? sender, DragEventArgs e)
+        {
+            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+                inputFileTextBox.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+                inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
+            }
+        }
+
+        private void MainForm_DragDrop(object? sender, DragEventArgs e)
+        {
+            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0)
+                {
+                    inputFileTextBox.Text = files[0];
+                    passwordTextBox.Focus();
+                    inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
+                }
+            }
+        }
+
+        private void MainForm_DragLeave(object? sender, EventArgs e)
+        {
+            inputFileTextBox.BackColor = System.Drawing.SystemColors.Window;
+        }
+
+        private void TextBox_DragEnter(object? sender, DragEventArgs e)
+        {
+            if (sender is not TextBox tb) return;
+
+            // Password accepts only text drops
+            if (tb == passwordTextBox)
+            {
+                if (e.Data != null && (e.Data.GetDataPresent(DataFormats.UnicodeText) || e.Data.GetDataPresent(DataFormats.Text)))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                    tb.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None;
+                    tb.BackColor = System.Drawing.SystemColors.Window;
+                }
+
+                return;
+            }
+
+            // Input and Output accept file drops or plain text paths
+            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+                tb.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            }
+            else if (e.Data != null && (e.Data.GetDataPresent(DataFormats.UnicodeText) || e.Data.GetDataPresent(DataFormats.Text)))
+            {
+                e.Effect = DragDropEffects.Copy;
+                tb.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+                tb.BackColor = System.Drawing.SystemColors.Window;
+            }
+        }
+
+        private void TextBox_DragDrop(object? sender, DragEventArgs e)
+        {
+            if (sender is not TextBox tb) return;
+
+            // Password: only text
+            if (tb == passwordTextBox)
+            {
+                if (e.Data != null && (e.Data.GetDataPresent(DataFormats.UnicodeText) || e.Data.GetDataPresent(DataFormats.Text)))
+                {
+                    var text = (string?)e.Data.GetData(DataFormats.UnicodeText) ?? (string?)e.Data.GetData(DataFormats.Text) ?? string.Empty;
+                    tb.Text = text.TrimEnd('\r', '\n');
+                }
+
+                tb.BackColor = System.Drawing.SystemColors.Window;
+                return;
+            }
+
+            // Input/Output: prefer file drops, else accept text (path)
+            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop)!;
+                if (files.Length > 0)
+                {
+                    tb.Text = files[0];
+                }
+            }
+            else if (e.Data != null && (e.Data.GetDataPresent(DataFormats.UnicodeText) || e.Data.GetDataPresent(DataFormats.Text)))
+            {
+                var text = (string?)e.Data.GetData(DataFormats.UnicodeText) ?? (string?)e.Data.GetData(DataFormats.Text);
+                if (!string.IsNullOrWhiteSpace(text))
+                    tb.Text = text.Trim();
+            }
+
+            if (tb == inputFileTextBox)
+            {
+                passwordTextBox.Focus();
+            }
+
+            tb.BackColor = System.Drawing.SystemColors.Window;
+        }
+
+        private void TextBox_DragLeave(object? sender, EventArgs e)
+        {
+            if (sender is Control c)
+                c.BackColor = System.Drawing.SystemColors.Window;
         }
     }
 }

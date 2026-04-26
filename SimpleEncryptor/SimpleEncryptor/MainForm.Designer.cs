@@ -48,6 +48,10 @@
             inputFileTextBox.Name = "inputFileTextBox";
             inputFileTextBox.Size = new Size(477, 27);
             inputFileTextBox.TabIndex = 0;
+            inputFileTextBox.AllowDrop = true;
+            inputFileTextBox.DragEnter += TextBox_DragEnter;
+            inputFileTextBox.DragDrop += TextBox_DragDrop;
+            inputFileTextBox.DragLeave += TextBox_DragLeave;
             // 
             // passwordTextBox
             // 
@@ -56,6 +60,10 @@
             passwordTextBox.Name = "passwordTextBox";
             passwordTextBox.Size = new Size(619, 27);
             passwordTextBox.TabIndex = 0;
+            passwordTextBox.AllowDrop = true;
+            passwordTextBox.DragEnter += TextBox_DragEnter;
+            passwordTextBox.DragDrop += TextBox_DragDrop;
+            passwordTextBox.DragLeave += TextBox_DragLeave;
             // 
             // label1
             // 
@@ -107,6 +115,10 @@
             outputTextBox.Name = "outputTextBox";
             outputTextBox.Size = new Size(477, 27);
             outputTextBox.TabIndex = 0;
+            outputTextBox.AllowDrop = true;
+            outputTextBox.DragEnter += TextBox_DragEnter;
+            outputTextBox.DragDrop += TextBox_DragDrop;
+            outputTextBox.DragLeave += TextBox_DragLeave;
             // 
             // label3
             // 
@@ -168,6 +180,9 @@
             Controls.Add(inputFileTextBox);
             Name = "MainForm";
             Text = "Simple Fast Encryptor";
+            AllowDrop = true;
+            DragEnter += MainForm_DragEnter;
+            DragDrop += MainForm_DragDrop;
             ResumeLayout(false);
             PerformLayout();
         }
